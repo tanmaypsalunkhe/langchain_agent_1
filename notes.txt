@@ -1,0 +1,11 @@
+Steps:
+
+Extract images from PDF (with pymupdf aka fitz).
+
+Generate embeddings for images (using something like CLIP).
+
+Generate embedding for user query.
+
+Compute similarity between query and images.
+
+Return/display the best-matching image.
