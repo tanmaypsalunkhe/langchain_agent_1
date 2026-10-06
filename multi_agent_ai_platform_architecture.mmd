@@ -1,0 +1,412 @@
+flowchart TB
+    %% ============================================================
+    %% Multi-Agent AI Platform with RAG, Guardrails, Evaluation
+    %% and Snowflake MCP
+    %% ============================================================
+
+    %% -------------------------
+    %% PROJECT / SYSTEM OVERVIEW
+    %% -------------------------
+    subgraph OVERVIEW["Multi-Agent AI Platform with RAG, Guardrails, Evaluation & Snowflake MCP"]
+        direction TB
+
+        GOAL["Project Goal<br/>Production-ready multi-agent AI system that answers business questions<br/>and provides data-driven recommendations"]
+
+        CAPS["Key Capabilities<br/>
+        ✓ Multi-agent orchestration using LangGraph<br/>
+        ✓ RAG with hybrid retrieval: PostgreSQL + pgvector + OpenSearch<br/>
+        ✓ Snowflake MCP for secure data access<br/>
+        ✓ LLMs on AWS Bedrock: Claude 3 / Titan / Llama<br/>
+        ✓ Pre- and post-response guardrails<br/>
+        ✓ Evaluation using LangSmith<br/>
+        ✓ Observability with OpenSearch dashboards<br/>
+        ✓ CI/CD with Jules + Spinnaker<br/>
+        ✓ FastAPI service deployed on AWS"]
+
+        STACK["Tech Stack<br/>LangGraph, LangChain, FastAPI, AWS Bedrock, Snowflake MCP<br/>PostgreSQL + pgvector, OpenSearch, S3, LangSmith<br/>Docker, AWS ECS/EKS, Spinnaker, CloudWatch"]
+
+        GOAL --> CAPS
+        GOAL --> STACK
+    end
+
+    %% -------------------------
+    %% MAIN ARCHITECTURE
+    %% -------------------------
+    subgraph ARCH["Architecture Overview"]
+        direction LR
+
+        %% RAG
+        subgraph RAG["RAG Knowledge Pipeline"]
+            direction TB
+
+            SOURCES["Data Sources<br/>
+            PDF / Docs<br/>
+            Websites<br/>
+            Confluence<br/>
+            DB / SQL<br/>
+            APIs<br/>
+            S3 / Files"]
+
+            INGEST["Ingestion Pipeline<br/>
+            Document Loaders<br/>
+            Web Crawlers<br/>
+            DB Extractors<br/>
+            ETL / Data Cleaning<br/>
+            Text Extraction"]
+
+            CHUNK["Chunking<br/>
+            Semantic Chunking<br/>
+            Recursive / Token-based"]
+
+            EMBED["Embedding<br/>
+            Bedrock Embedding Model<br/>
+            Amazon Titan / Embedding"]
+
+            VECTORS["Vector Stores<br/>
+            PostgreSQL + pgvector<br/>
+            OpenSearch Vector"]
+
+            SOURCES --> INGEST --> CHUNK --> EMBED --> VECTORS
+        end
+
+        %% Multi-agent
+        subgraph AGENTS["Multi-Agent Orchestration - LangGraph"]
+            direction TB
+
+            SUP["Supervisor Agent<br/>(LangGraph)<br/>Workflow, state & routing"]
+
+            INTENT["Query Understanding Agent<br/>Intent, entities, metrics,<br/>time range, filters"]
+
+            RETRIEVAL["Retrieval Agent<br/>Hybrid search<br/>pgvector + OpenSearch"]
+
+            DATA["Data Agent - Snowflake<br/>Intent → SQL<br/>Execute through MCP<br/>Validate results"]
+
+            RAGAGENT["RAG Agent<br/>Generate answer with context"]
+
+            TOOLS["Tool / Function Agent<br/>External APIs, Calculator,<br/>CRM, Ticketing, Custom APIs"]
+
+            MEMORY["Memory Agent<br/>Conversation history<br/>and user context"]
+
+            SUP --> INTENT
+            SUP --> RETRIEVAL
+            SUP --> DATA
+            SUP --> RAGAGENT
+            SUP --> TOOLS
+            SUP --> MEMORY
+
+            INTENT <--> RETRIEVAL
+            RETRIEVAL --> RAGAGENT
+            DATA --> RAGAGENT
+            TOOLS --> RAGAGENT
+            MEMORY --> SUP
+        end
+
+        %% LLM
+        subgraph LLM["LLM - AWS Bedrock"]
+            direction TB
+            BEDROCK["Amazon Bedrock<br/>Claude 3 / Titan / Llama"]
+
+            subgraph INTEGRATIONS["Tools & Integrations"]
+                MCP["Snowflake MCP Server"]
+                API["APIs"]
+                CALC["Calculator"]
+                CRM["CRM"]
+                TICK["Ticketing"]
+                CUSTOM["Custom APIs"]
+            end
+
+            CONVMEM["Conversation Memory<br/>(PostgreSQL)"]
+
+            BEDROCK <--> MCP
+            BEDROCK <--> API
+            BEDROCK <--> CALC
+            BEDROCK <--> CRM
+            BEDROCK <--> TICK
+            BEDROCK <--> CUSTOM
+            BEDROCK <--> CONVMEM
+        end
+
+        %% Evaluation
+        subgraph EVAL["Evaluation & Observability"]
+            direction TB
+
+            LANGSMITH["LangSmith Evaluation<br/>
+            Answer Relevance<br/>
+            Context Relevance<br/>
+            Faithfulness / Hallucination<br/>
+            Groundedness<br/>
+            CoT / Reasoning Quality<br/>
+            Latency<br/>
+            Token Usage<br/>
+            Retrieval Precision / Recall<br/>
+            User Feedback Score"]
+
+            DASH["OpenSearch Dashboards<br/>
+            Query Logs<br/>
+            Response Logs<br/>
+            Retrieval Logs<br/>
+            Latency / Token Usage<br/>
+            User Feedback"]
+
+            FEEDBACK["Feedback Loop<br/>
+            Human Feedback<br/>
+            Model / Prompt Tuning<br/>
+            RAG Pipeline Improvement"]
+        end
+
+        VECTORS --> RETRIEVAL
+        RAG --> AGENTS
+        AGENTS <--> LLM
+        LLM --> EVAL
+        AGENTS --> EVAL
+        EVAL --> FEEDBACK
+        FEEDBACK --> RAG
+        FEEDBACK --> AGENTS
+    end
+
+    %% -------------------------
+    %% RUNTIME USER FLOW
+    %% -------------------------
+    subgraph RUNTIME["Data / System Flows - Runtime"]
+        direction LR
+
+        USER["User<br/>Web / Mobile / API"]
+        APIENTRY["FastAPI<br/>REST / WebSocket"]
+
+        G1["1. User asks a question"]
+        G2["2. Pre-guardrails<br/>Input moderation<br/>PII detection<br/>Prompt injection detection<br/>Query classification"]
+        G3["3. Supervisor Agent<br/>Analyzes intent and routes"]
+        G4["4. Retrieval Agent<br/>Hybrid search"]
+        G5["5. Data Agent<br/>Snowflake MCP / secure SQL"]
+        G6["6. RAG Agent<br/>Combines documents + data"]
+        G7["7. LLM<br/>Generates answer + reasoning"]
+        G8["8. Post-guardrails<br/>Hallucination check<br/>PII redaction<br/>Citation validation"]
+        G9["9. Final answer<br/>with citations"]
+        G10["10. Trace logged to<br/>LangSmith + OpenSearch"]
+
+        USER --> APIENTRY --> G1 --> G2 --> G3
+        G3 --> G4 --> G5 --> G6 --> G7 --> G8 --> G9 --> G10
+    end
+
+    %% -------------------------
+    %% OFFLINE KNOWLEDGE FLOW
+    %% -------------------------
+    subgraph OFFLINE["Knowledge Data Flow - Offline"]
+        direction TB
+
+        O1["1. Documents ingested<br/>S3, websites, DB, Confluence, etc."]
+        O2["2. Cleaning, text extraction<br/>and chunking"]
+        O3["3. Embeddings generated<br/>using Bedrock embedding model"]
+        O4["4. Stored in vector stores<br/>PostgreSQL + pgvector<br/>OpenSearch Vector"]
+        O5["5. Metadata indexed<br/>for filtering and retrieval"]
+
+        O1 --> O2 --> O3 --> O4 --> O5
+    end
+
+    %% -------------------------
+    %% SNOWFLAKE MCP FLOW
+    %% -------------------------
+    subgraph MCPFLOW["Snowflake MCP Flow"]
+        direction TB
+
+        M1["1. MCP Server connects securely to Snowflake"]
+        M2["2. Receives SQL requests from Data Agent"]
+        M3["3. Executes queries with read-only role"]
+        M4["4. Returns structured data<br/>(JSON / CSV)"]
+
+        M1 --> M2 --> M3 --> M4
+    end
+
+    %% -------------------------
+    %% AGENT RESPONSIBILITIES
+    %% -------------------------
+    subgraph RESPONSIBILITIES["Agents & Responsibilities"]
+        direction LR
+
+        R_SUP["Supervisor Agent<br/>Orchestrates workflow using LangGraph<br/>Manages state and routing"]
+        R_INT["Query Understanding Agent<br/>Extracts intent, entities, metrics,<br/>time range and filters"]
+        R_RET["Retrieval Agent<br/>Semantic + keyword vector retrieval"]
+        R_DATA["Data Agent<br/>Translates intent to SQL<br/>Executes via MCP<br/>Validates results"]
+        R_RAG["RAG Agent<br/>Synthesizes information from docs + data"]
+        R_TOOL["Tool / Function Agent<br/>Uses APIs, calculator, CRM, ticketing"]
+        R_MEM["Memory Agent<br/>Maintains conversation history and context"]
+    end
+
+    %% -------------------------
+    %% GUARDRAILS
+    %% -------------------------
+    subgraph GUARDRAILS["Guardrails"]
+        direction LR
+
+        PRE["Pre-query Guardrails<br/>
+        Input moderation<br/>
+        PII detection<br/>
+        Prompt injection detection<br/>
+        Query classification<br/>
+        Entity validation"]
+
+        POST["Post-response Guardrails<br/>
+        Output moderation<br/>
+        Hallucination detection<br/>
+        PII redaction<br/>
+        Citation validation<br/>
+        Confidence scoring"]
+    end
+
+    %% -------------------------
+    %% DEPLOYMENT / DEVOPS
+    %% -------------------------
+    subgraph DEVOPS["Deployment & DevOps Pipeline"]
+        direction LR
+
+        IDE["Developer / IDE<br/>Jules AI Coding Assistant<br/>
+        Code generation<br/>
+        Refactoring<br/>
+        Unit tests<br/>
+        Documentation"]
+
+        REPO["Code Repository<br/>GitHub<br/>Bitbucket / GitLab"]
+
+        CI["CI Pipeline<br/>Spinnaker / automated CI/CD<br/>
+        Code analysis<br/>
+        Unit tests<br/>
+        Security scan<br/>
+        Build Docker image"]
+
+        CD["CD Pipeline - Spinnaker<br/>
+        Deploy to Dev<br/>
+        Integration tests<br/>
+        Manual approval<br/>
+        Deploy to Staging<br/>
+        Smoke tests<br/>
+        Deploy to Prod"]
+
+        AWS["Deployment - AWS<br/>
+        ECS / EC2 / EKS<br/>
+        Docker containers<br/>
+        Auto scaling<br/>
+        Load balancer"]
+
+        APP["Running Application - Dev Server<br/>
+        FastAPI application layer<br/>
+        REST endpoints<br/>
+        WebSocket streaming<br/>
+        Health checks<br/>
+        Metrics endpoint"]
+
+        IDE --> REPO --> CI --> CD --> AWS --> APP
+    end
+
+    %% -------------------------
+    %% AWS DATA / STORAGE
+    %% -------------------------
+    subgraph AWSDATA["Data & Storage Layer - AWS"]
+        direction LR
+
+        S3["Amazon S3<br/>Raw Data"]
+        PG1["PostgreSQL<br/>Conversations<br/>Metadata"]
+        PG2["PostgreSQL + pgvector<br/>Embeddings"]
+        OS["OpenSearch<br/>Indexing / Vector Search"]
+
+        S3 --> PG2
+        PG2 --> OS
+    end
+
+    %% -------------------------
+    %% MONITORING
+    %% -------------------------
+    subgraph MONITOR["Monitoring & Logging"]
+        direction LR
+
+        CW["CloudWatch<br/>Metrics"]
+        OSLOG["OpenSearch<br/>Dashboards"]
+        XRAY["AWS X-Ray<br/>Tracing"]
+        CT["CloudTrail<br/>Audit Logs"]
+    end
+
+    %% -------------------------
+    %% SECURITY
+    %% -------------------------
+    subgraph SECURITY["Security"]
+        direction LR
+
+        IAM["IAM Roles"]
+        SECRETS["Secrets Manager<br/>API Keys"]
+        KMS["KMS Encryption"]
+        VPC["VPC / Security Groups"]
+    end
+
+    %% -------------------------
+    %% ROADMAP
+    %% -------------------------
+    subgraph ROADMAP["Implementation Roadmap - Suggested"]
+        direction LR
+
+        P1["Phase 1 - Foundation<br/>2-3 weeks<br/>
+        Set up AWS infra<br/>
+        Implement RAG pipeline<br/>
+        Basic FastAPI service<br/>
+        Integrate Bedrock LLM"]
+
+        P2["Phase 2 - Multi-Agent Core<br/>3-4 weeks<br/>
+        Build LangGraph orchestration<br/>
+        Implement core agents<br/>
+        Integrate Snowflake MCP<br/>
+        Hybrid retrieval"]
+
+        P3["Phase 3 - Guardrails & Evaluation<br/>2-3 weeks<br/>
+        Add pre/post guardrails<br/>
+        Set up LangSmith evaluation<br/>
+        Create dashboards"]
+
+        P4["Phase 4 - Production Ready<br/>2-3 weeks<br/>
+        CI/CD with Spinnaker<br/>
+        Load testing & optimization<br/>
+        Security hardening<br/>
+        Go live"]
+
+        P1 --> P2 --> P3 --> P4
+    end
+
+    %% -------------------------
+    %% SUCCESS CRITERIA
+    %% -------------------------
+    subgraph SUCCESS["Success Criteria"]
+        direction TB
+        S1["✓ Accurate answers with citations"]
+        S2["✓ Secure Snowflake data access"]
+        S3["✓ Low latency & high availability"]
+        S4["✓ High evaluation scores"]
+        S5["✓ User adoption & feedback"]
+    end
+
+    %% -------------------------
+    %% CROSS-SECTION CONNECTIONS
+    %% -------------------------
+    APIENTRY --> SUP
+    VECTORS --> PG2
+    MCP --> M3
+    M4 --> DATA
+    SOURCES --> O1
+    O5 --> RETRIEVAL
+    PRE --> SUP
+    SUP --> POST
+    POST --> G9
+
+    APP --> USER
+    APP --> CW
+    APP --> XRAY
+    APP --> OSLOG
+    APP --> CT
+
+    AWS --> IAM
+    AWS --> VPC
+    AWS --> KMS
+    AWS --> SECRETS
+
+    OS --> OSLOG
+    PG1 --> OSLOG
+    PG2 --> OSLOG
+    CONVMEM --> PG1
+
+    P4 --> SUCCESS

@@ -1,0 +1,252 @@
+flowchart LR
+    %% ============================================================
+    %% CENTRAL ARCHITECTURE - LUCIDCHART FRIENDLY
+    %% Multi-Agent AI Platform with RAG, Guardrails, Evaluation
+    %% and Snowflake MCP
+    %% ============================================================
+
+    %% -------------------------
+    %% 1. DATA / KNOWLEDGE LAYER
+    %% -------------------------
+    subgraph RAG["RAG Knowledge Pipeline"]
+        direction LR
+
+        DS["Data Sources<br/>
+        📄 PDF / Docs<br/>
+        🌐 Websites<br/>
+        Confluence<br/>
+        🗄️ DB / SQL<br/>
+        🔌 APIs<br/>
+        ☁️ S3 / Files"]
+
+        ING["Ingestion & Processing<br/>
+        Document Loaders<br/>
+        Web Crawlers<br/>
+        DB Extractors<br/>
+        ETL / Cleaning<br/>
+        Text Extraction"]
+
+        CH["Chunking<br/>
+        Semantic Chunking<br/>
+        Recursive / Token-based"]
+
+        EMB["Embedding<br/>
+        Bedrock Embedding Model"]
+
+        VS["Vector Stores<br/>
+        PostgreSQL + pgvector<br/>
+        OpenSearch Vector"]
+
+        DS --> ING --> CH --> EMB --> VS
+    end
+
+    %% -------------------------
+    %% 2. MULTI-AGENT LAYER
+    %% -------------------------
+    subgraph ORCH["Multi-Agent Orchestration — LangGraph"]
+        direction TB
+
+        SUP["Supervisor Agent<br/>
+        Workflow • State • Routing"]
+
+        QU["Query Understanding Agent<br/>
+        Intent • Entities<br/>
+        Metrics • Time Range • Filters"]
+
+        RET["Retrieval Agent<br/>
+        Hybrid Search<br/>
+        pgvector + OpenSearch"]
+
+        DATA["Data Agent<br/>
+        Intent → SQL<br/>
+        Secure Snowflake Execution"]
+
+        RAGAG["RAG Agent<br/>
+        Generate Answer<br/>
+        with Retrieved Context"]
+
+        TOOL["Tool / Function Agent<br/>
+        APIs • Calculator<br/>
+        CRM • Ticketing"]
+
+        MEM["Memory Agent<br/>
+        Conversation History<br/>
+        User Context"]
+
+        SUP --> QU
+        SUP --> RET
+        SUP --> DATA
+        SUP --> RAGAG
+        SUP --> TOOL
+        SUP --> MEM
+
+        QU --> RET
+        RET --> RAGAG
+        DATA --> RAGAG
+        TOOL --> RAGAG
+        MEM --> SUP
+    end
+
+    %% -------------------------
+    %% 3. LLM / TOOL LAYER
+    %% -------------------------
+    subgraph LLM["LLM & Tools — AWS Bedrock"]
+        direction TB
+
+        BED["Amazon Bedrock<br/>
+        Claude 3 • Titan • Llama"]
+
+        subgraph TOOLS["Tools & Integrations"]
+            MCP["Snowflake MCP Server"]
+            API["External APIs"]
+            CALC["Calculator"]
+            CRM["CRM"]
+            TICK["Ticketing"]
+            CUSTOM["Custom APIs"]
+        end
+
+        BED --> MCP
+        BED --> API
+        BED --> CALC
+        BED --> CRM
+        BED --> TICK
+        BED --> CUSTOM
+    end
+
+    %% -------------------------
+    %% 4. EVALUATION / OBSERVABILITY
+    %% -------------------------
+    subgraph OBS["Evaluation & Observability"]
+        direction TB
+
+        LS["LangSmith Evaluation<br/>
+        Answer Relevance<br/>
+        Context Relevance<br/>
+        Faithfulness / Hallucination<br/>
+        Groundedness<br/>
+        Reasoning Quality<br/>
+        Latency • Token Usage<br/>
+        Retrieval Precision / Recall"]
+
+        OS["OpenSearch Dashboards<br/>
+        Query Logs<br/>
+        Response Logs<br/>
+        Retrieval Logs<br/>
+        Latency / Token Usage<br/>
+        User Feedback"]
+
+        FB["Feedback Loop<br/>
+        Human Feedback<br/>
+        Prompt / Model Tuning<br/>
+        RAG Improvement"]
+
+        LS --> FB
+        OS --> FB
+    end
+
+    %% -------------------------
+    %% 5. CROSS-CUTTING GUARDRAILS
+    %% -------------------------
+    subgraph GUARD["Guardrails"]
+        direction TB
+
+        PRE["Pre-Query Guardrails<br/>
+        Input Moderation<br/>
+        PII Detection<br/>
+        Prompt Injection Detection<br/>
+        Query Classification<br/>
+        Entity Validation"]
+
+        POST["Post-Response Guardrails<br/>
+        Output Moderation<br/>
+        Hallucination Detection<br/>
+        PII Redaction<br/>
+        Citation Validation<br/>
+        Confidence Scoring"]
+
+        PRE --> POST
+    end
+
+    %% -------------------------
+    %% 6. MAIN ARCHITECTURE FLOWS
+    %% -------------------------
+
+    %% RAG → Retrieval
+    VS -->|Hybrid Retrieval| RET
+
+    %% Agent ↔ LLM
+    ORCH <-->|Prompts / Responses| BED
+
+    %% Data Agent → MCP
+    DATA -->|Secure SQL Request| MCP
+    MCP -->|Structured Data| DATA
+
+    %% RAG Agent → LLM
+    RAGAG -->|Context + Prompt| BED
+
+    %% Guardrails around request/response
+    PRE -->|Validated Request| SUP
+    POST -->|Validated Answer| USER
+
+    %% Orchestration → evaluation
+    ORCH --> LS
+    BED --> LS
+    ORCH --> OS
+
+    %% Feedback loop back into architecture
+    FB -.->|Improve prompts / retrieval / agents| ORCH
+    FB -.->|Improve knowledge pipeline| RAG
+
+    %% -------------------------
+    %% 7. USER / API ENTRY POINT
+    %% -------------------------
+    USER["User / Client<br/>
+    Web • Mobile • API"]
+
+    APIENTRY["FastAPI<br/>
+    REST / WebSocket"]
+
+    USER --> APIENTRY
+    APIENTRY --> PRE
+
+    %% Final response
+    BED --> POST
+
+    %% -------------------------
+    %% 8. SNOWFLAKE
+    %% -------------------------
+    SNOW["Snowflake<br/>
+    Enterprise Data<br/>
+    Read-Only Role"]
+
+    MCP -->|Read-only SQL| SNOW
+    SNOW -->|Structured Results| MCP
+
+    %% -------------------------
+    %% 9. MEMORY
+    %% -------------------------
+    PG["PostgreSQL<br/>
+    Conversation Memory"]
+
+    MEM --> PG
+    PG --> MEM
+
+    %% -------------------------
+    %% 10. VISUAL STYLING
+    %% -------------------------
+
+    classDef user fill:#ffffff,stroke:#333333,stroke-width:2px;
+    classDef pipeline fill:#f8f9ff,stroke:#7c3aed,stroke-width:1.5px;
+    classDef agent fill:#eef5ff,stroke:#2563eb,stroke-width:1.5px;
+    classDef llm fill:#f0fdf4,stroke:#16a34a,stroke-width:1.5px;
+    classDef guard fill:#fff7ed,stroke:#ea580c,stroke-width:1.5px;
+    classDef obs fill:#faf5ff,stroke:#9333ea,stroke-width:1.5px;
+    classDef database fill:#f8fafc,stroke:#475569,stroke-width:1.5px;
+
+    class USER,APIENTRY user;
+    class DS,ING,CH,EMB,VS pipeline;
+    class SUP,QU,RET,DATA,RAGAG,TOOL,MEM agent;
+    class BED,MCP,API,CALC,CRM,TICK,CUSTOM llm;
+    class PRE,POST guard;
+    class LS,OS,FB obs;
+    class SNOW,PG database;
